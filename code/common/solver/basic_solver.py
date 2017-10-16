@@ -14,13 +14,13 @@ from .solver import Solver
 class BasicSolver(Solver):
 
   def __init__(self, dataset, net, **kwargs):
-    self.learning_rate = float(kwargs.get('learning_rate', 0.5))
-    self.max_steps = int(kwargs.get('max_steps', 2000))
-
     self.summary_iter = int(kwargs.get('summary_iter', 100))
     self.summary_dir = kwargs.get('summary_dir', 'summary')
     self.snapshot_iter = int(kwargs.get('snapshot_iter', 100000))
     self.snapshot_dir = kwargs.get('snapshot_dir', 'cache')
+
+    self.learning_rate = float(kwargs.get('learning_rate', 0.1))
+    self.max_steps = int(kwargs.get('max_steps', 4000))
 
     self.dataset = dataset
     self.net = net
@@ -28,7 +28,7 @@ class BasicSolver(Solver):
   def build_optimizer(self):
     with tf.variable_scope('optimizer'):
       train_op = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(
-          self.loss)
+          self.total_loss)
     return train_op
 
   def build_train_net(self):
@@ -36,6 +36,8 @@ class BasicSolver(Solver):
 
     self.layers = self.net.inference(data)
     self.loss = self.net.loss(self.layers, labels)
+    self.total_loss = tf.add_n(
+        tf.get_collection('losses') + [self.loss], name='total_loss')
     self.train_op = self.build_optimizer()
 
     for loss_layer in tf.get_collection('losses') + [self.loss]:
@@ -57,15 +59,16 @@ class BasicSolver(Solver):
 
   def train(self):
     self.build_train_net()
-    print(tf.trainable_variables())
-    saver = tf.train.Saver(tf.trainable_variables())
     init_op = tf.global_variables_initializer()
+
+    saver = tf.train.Saver()
     summary_op = tf.summary.merge_all()
     summary_writer = tf.summary.FileWriter(
         os.path.join(self.summary_dir, 'train'))
     summary_writer.add_graph(tf.get_default_graph())
 
-    with tf.Session() as sess:
+    config = tf.ConfigProto(log_device_placement=False)
+    with tf.Session(config=config) as sess:
       sess.run(init_op)
 
       for step in xrange(1, self.max_steps + 1):
@@ -75,15 +78,9 @@ class BasicSolver(Solver):
 
         if step % self.summary_iter == 0:
           summary, loss = sess.run([summary_op, self.loss])
-
           summary_writer.add_summary(summary, step)
 
           examples_per_sec = self.dataset.batch_size / duration
-          sec_per_batch = float(duration)
-          # format_str = ('%s: step %8d, loss = %.4f (%.1f examples/sec; %.3f '
-          #               'sec/batch)')
-          # print(format_str % (datetime.now(), step, loss, examples_per_sec,
-          #                     sec_per_batch))
           format_str = ('step %6d: loss = %.4f (%.1f examples/sec)')
           print(format_str % (step, loss, examples_per_sec))
 
@@ -112,9 +109,9 @@ class BasicSolver(Solver):
         print("====================")
         print("[error]: can't find checkpoint file: {}".format(checkpoint))
         sys.exit(0)
-      else:
-        print("load checkpoint file: {}".format(checkpoint))
-        num_iter = int(checkpoint.split('-')[-1])
+
+      print("load checkpoint file: {}".format(checkpoint))
+      num_iter = int(checkpoint.split('-')[-1])
 
       saver.restore(sess, checkpoint)
 
@@ -145,10 +142,8 @@ class BasicSolver(Solver):
         print("====================")
         print("[error]: can't find checkpoint file: {}".format(checkpoint))
         sys.exit(0)
-      else:
-        print("load checkpoint file: {}".format(checkpoint))
-        num_iter = int(checkpoint.split('-')[-1])
 
+      print("load checkpoint file: {}".format(checkpoint))
       saver.restore(sess, checkpoint)
 
       layers = sess.run(self.layers)

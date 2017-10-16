@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from common.dataset.mnist import MNIST as Dataset
 from common.net.softmax import Softmax as Net
-from common.solver.basic_solver import BasicSolver
+from common.solver.basic_solver import BasicSolver as Solver
 
 
 def main():
@@ -15,14 +15,14 @@ def main():
 
   with tf.Graph().as_default():
     dataset = Dataset(data_dir=args.data_dir)
-    net = Net(output_dim=10)
-    solver = BasicSolver(dataset, net)
+    net = Net(output_size=10)
+    solver = Solver(dataset, net)
     solver.train()
 
   with tf.Graph().as_default():
     dataset = Dataset(data_dir=args.data_dir, split='test', count=1)
-    net = Net(output_dim=10)
-    solver = BasicSolver(dataset, net, learning_rate=0.1)
+    net = Net(output_size=10)
+    solver = Solver(dataset, net, learning_rate=0.1)
     solver.test()
 
 

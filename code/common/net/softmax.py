@@ -5,17 +5,17 @@ from .net import Net
 class Softmax(Net):
 
   def __init__(self, **kwargs):
-    self.output_dim = kwargs.get('output_dim', 1)
+    self.output_size = kwargs.get('output_size', 1)
     return
 
   def inference(self, data):
 
-    feature_dim = data.get_shape()[1].value
+    feature_size = data.get_shape()[1].value
 
     with tf.name_scope('weights'):
-      W = tf.Variable(tf.zeros([feature_dim, self.output_dim]))
+      W = tf.Variable(tf.zeros([feature_size, self.output_size]))
     with tf.name_scope('biases'):
-      b = tf.Variable(tf.zeros([self.output_dim]), name='bias')
+      b = tf.Variable(tf.zeros([self.output_size]), name='bias')
     with tf.name_scope('y'):
       y = tf.matmul(data, W) + b
     with tf.name_scope('probs'):

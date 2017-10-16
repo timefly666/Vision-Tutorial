@@ -3,10 +3,11 @@ from .net import Net
 from .layer.basic_layer import linear_relu, linear
 
 
-class MLP(Net):
+class BasicMLP(Net):
 
   def __init__(self, **kwargs):
-    self.output_dim = kwargs.get('output_dim', 1)
+    self.output_size = kwargs.get('output_size', 1)
+    self.mode = kwargs.get('output_size', 'train')
     return
 
   def inference(self, data):
@@ -17,7 +18,7 @@ class MLP(Net):
       hidden2 = linear_relu(hidden1, 32)
 
     with tf.variable_scope('softmax_linear'):
-      y = linear(hidden2, self.output_dim)
+      y = linear(hidden2, self.output_size)
 
     probs = tf.nn.softmax(y)
     return {'logits': y, 'probs': probs}
