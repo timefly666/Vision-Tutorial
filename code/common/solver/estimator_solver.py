@@ -51,8 +51,8 @@ class EstimatorSolver(StandardSolver):
           loss=total_loss,
           eval_metric_ops=metrics)
 
-    tf.summary.scalar('total_loss', total_loss)
-    tf.summary.scalar('loss', loss)
+    tf.summary.scalar('loss', total_loss)
+    tf.summary.scalar('loss_without_regularization', loss)
 
     # train
     train_op = self.build_optimizer(total_loss)

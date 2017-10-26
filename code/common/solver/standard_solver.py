@@ -66,8 +66,8 @@ class StandardSolver(Solver):
                                [self.loss])
     self.train_op = self.build_optimizer(self.total_loss)
 
-    tf.summary.scalar('total_loss', self.total_loss)
-    tf.summary.scalar('loss', self.loss)
+    tf.summary.scalar('loss', self.total_loss)
+    tf.summary.scalar('loss_without_regularization', loss)
 
   def build_eval_net(self):
     data, labels = self.dataset.batch()
