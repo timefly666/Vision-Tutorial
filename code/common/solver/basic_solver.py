@@ -15,9 +15,9 @@ class BasicSolver(Solver):
 
   def __init__(self, dataset, net, **kwargs):
     self.summary_iter = int(kwargs.get('summary_iter', 100))
-    self.summary_dir = kwargs.get('summary_dir', 'summary')
+    self.summary_dir = kwargs.get('summary_dir', 'cache/summary')
     self.snapshot_iter = int(kwargs.get('snapshot_iter', 100000))
-    self.snapshot_dir = kwargs.get('snapshot_dir', 'cache')
+    self.snapshot_dir = kwargs.get('snapshot_dir', 'cache/model')
 
     self.learning_rate = float(kwargs.get('learning_rate', 0.1))
     self.max_steps = int(kwargs.get('max_steps', 4000))
@@ -36,22 +36,25 @@ class BasicSolver(Solver):
 
     self.layers = self.net.inference(data)
     self.loss = self.net.loss(self.layers, labels)
-    self.total_loss = tf.add_n(
-        tf.get_collection('losses') + [self.loss], name='total_loss')
+    self.total_loss = tf.add_n(tf.get_collection('losses') + [self.loss])
     self.train_op = self.build_optimizer()
 
-    for loss_layer in tf.get_collection('losses') + [self.loss]:
-      tf.summary.scalar(loss_layer.op.name, loss_layer)
+    tf.summary.scalar('total_loss', self.total_loss)
+    tf.summary.scalar('loss', self.loss)
 
-  def build_test_net(self):
+  def build_eval_net(self):
     data, labels = self.dataset.batch()
 
     self.layers = self.net.inference(data)
     self.metrics = self.net.metric(self.layers, labels)
-    self.update_op = self.metrics.pop('update')
 
+    update_ops = []
     for key, value in self.metrics.iteritems():
-      tf.summary.scalar(key, value)
+      metric, update_op = value
+      update_ops.append(update_op)
+      tf.summary.scalar(key, metric)
+      self.metrics[key] = metric
+    self.update_op = tf.group(*update_ops)
 
   def build_inference_net(self):
     data, _ = self.dataset.batch()
@@ -89,8 +92,8 @@ class BasicSolver(Solver):
         if (step % self.snapshot_iter == 0) or (step == self.max_steps):
           saver.save(sess, self.snapshot_dir + '/model.ckpt', global_step=step)
 
-  def test(self):
-    self.build_test_net()
+  def eval(self):
+    self.build_eval_net()
     saver = tf.train.Saver()
     init_op = [
         tf.global_variables_initializer(),
@@ -127,7 +130,7 @@ class BasicSolver(Solver):
           summary_writer.add_summary(summary, num_iter)
           break
 
-  def inference(self):
+  def predict(self):
     self.build_inference_net()
     saver = tf.train.Saver()
     init_op = [

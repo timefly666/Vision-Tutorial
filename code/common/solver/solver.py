@@ -6,8 +6,8 @@ class Solver(object):
   def train(self):
     raise NotImplementedError
 
-  def test(self):
+  def eval(self):
     raise NotImplementedError
 
-  def inference(self):
+  def predict(self):
     raise NotImplementedError

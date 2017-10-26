@@ -6,8 +6,8 @@ import argparse
 import tensorflow as tf
 
 from common.dataset.mnist import MNIST as Dataset
-from common.net.basic_mlp import BasicMLP as Net
 from common.solver.basic_solver import BasicSolver as Solver
+from net.basic_mlp import BasicMLP as Net
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
     dataset = Dataset(data_dir=args.data_dir, split='test', count=1)
     net = Net(output_size=10)
     solver = Solver(dataset, net, learning_rate=0.1)
-    solver.test()
+    solver.eval()
 
 
 def parse_args():

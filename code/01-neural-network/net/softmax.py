@@ -1,5 +1,5 @@
 import tensorflow as tf
-from .net import Net
+from common.net.net import Net
 
 
 class Softmax(Net):
@@ -9,7 +9,6 @@ class Softmax(Net):
     return
 
   def inference(self, data):
-
     feature_size = data.get_shape()[1].value
 
     with tf.name_scope('weights'):
@@ -18,22 +17,25 @@ class Softmax(Net):
       b = tf.Variable(tf.zeros([self.output_size]), name='bias')
     with tf.name_scope('y'):
       y = tf.matmul(data, W) + b
-    with tf.name_scope('probs'):
-      probs = tf.nn.softmax(y)
+    with tf.name_scope('predictions'):
+      predictions = tf.nn.softmax(y)
 
-    return {'logits': y, 'probs': probs}
+    return {'logits': y, 'predictions': predictions}
 
   def loss(self, layers, labels):
     logits = layers['logits']
 
-    with tf.variable_scope('loss'):
+    with tf.variable_scope('losses'):
       loss = tf.reduce_mean(
           tf.nn.softmax_cross_entropy_with_logits(labels=labels, logits=logits))
     return loss
 
   def metric(self, layers, labels):
-    probs = layers['probs']
-    with tf.variable_scope('metric'):
-      metric, update_op = tf.metrics.accuracy(
-          labels=tf.argmax(labels, 1), predictions=tf.argmax(probs, 1))
-    return {'update': update_op, 'accuracy': metric}
+    predictions = layers['predictions']
+    with tf.variable_scope('metrics'):
+      metrics = {
+          "accuracy":
+              tf.metrics.accuracy(
+                  tf.argmax(labels, 1), predictions=tf.argmax(predictions, 1))
+      }
+    return metrics

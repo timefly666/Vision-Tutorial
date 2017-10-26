@@ -4,12 +4,13 @@ from __future__ import print_function
 
 import argparse
 import sys
+import os
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from common.dataset.tfrecord import TFRecord as Dataset
-from common.net.basic_cnn import BasicCNN as Net
 from common.solver.basic_solver import BasicSolver as Solver
+from net.basic_cnn import BasicCNN as Net
 
 
 def plot_sample(x, y):
@@ -41,10 +42,15 @@ def parse_args():
 
 def main():
   args = parse_args()
+  file_dict = {
+      'train': os.path.join(args.data_dir, 'train.tfrecords'),
+      'eval': os.path.join(args.data_dir, 'test.tfrecords')
+  }
 
   with tf.Graph().as_default():
     dataset = Dataset(
-        files='../../dataset/kaggle/train.tfrecords',
+        file_dict=file_dict,
+        split='train',
         parse_function=parse_example,
         batch_size=50)
     net = Net(output_size=30)
@@ -53,22 +59,23 @@ def main():
 
   with tf.Graph().as_default():
     dataset = Dataset(
-        files='../../dataset/kaggle/test.tfrecords',
+        file_dict=file_dict,
+        split='eval',
         parse_function=parse_example,
-        batch_size=50,
-        count=1)
+        batch_size=50)
     net = Net(output_size=30)
     solver = Solver(dataset, net)
-    solver.test()
 
+    solver.eval()
   with tf.Graph().as_default():
     dataset = Dataset(
-        files='../../dataset/kaggle/test.tfrecords',
+        file_dict=file_dict,
+        split='eval',
         parse_function=parse_example,
         batch_size=1)
     net = Net(output_size=30)
     solver = Solver(dataset, net)
-    results = solver.inference()
+    results = solver.predict()
   plot_sample(results['data'], results['predictions'][0])
 
 

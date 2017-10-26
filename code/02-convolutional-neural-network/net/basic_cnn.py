@@ -1,6 +1,6 @@
 import tensorflow as tf
-from .net import Net
-from .layer.basic_layer import *
+from common.net.net import Net
+from common.net.layer.basic_layer import *
 
 
 class BasicCNN(Net):
@@ -41,13 +41,14 @@ class BasicCNN(Net):
 
   def loss(self, layers, labels):
     predictions = layers['predictions']
-    with tf.variable_scope('loss'):
+    with tf.variable_scope('losses'):
       loss = tf.reduce_mean(tf.square(predictions - labels), name='mse')
     return loss
 
   def metric(self, layers, labels):
     predictions = layers['predictions']
-    with tf.variable_scope('metric'):
-      metric, update_op = tf.metrics.mean_squared_error(
-          labels=labels, predictions=predictions)
-    return {'update': update_op, 'mse': metric}
+    with tf.variable_scope('metrics'):
+      metrics = {
+        "mse": tf.metrics.mean_squared_error(
+          labels=labels, predictions=predictions)}
+    return metrics

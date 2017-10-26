@@ -18,12 +18,12 @@ def load_dataset(data_dir, split):
 class MNIST(Dataset):
 
   def __init__(self, **kwargs):
-    self.data_dir = kwargs.get('data_dir', None)
-    self.split = kwargs.get('split', 'train')
-
     self.count = kwargs.get('count', None)
     self.buffer_size = kwargs.get('buffer_size', 10000)
     self.batch_size = kwargs.get('batch_size', 50)
+
+    self.data_dir = kwargs.get('data_dir', None)
+    self.split = kwargs.get('split', 'train')
 
     if self.split not in ['train', 'validation', 'test']:
       raise ValueError('unsupported dataset mode!')
