@@ -40,7 +40,7 @@ class BasicSolver(Solver):
     self.train_op = self.build_optimizer()
 
     tf.summary.scalar('loss', self.total_loss)
-    tf.summary.scalar('loss_without_regularization', loss)
+    tf.summary.scalar('loss_without_regularization', self.loss)
 
   def build_eval_net(self):
     data, labels = self.dataset.batch()

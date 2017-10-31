@@ -65,8 +65,8 @@ def main():
         batch_size=50)
     net = Net(output_size=30)
     solver = Solver(dataset, net)
-
     solver.eval()
+
   with tf.Graph().as_default():
     dataset = Dataset(
         file_dict=file_dict,
