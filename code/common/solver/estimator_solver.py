@@ -26,7 +26,7 @@ class EstimatorSolver(StandardSolver):
     Returns:
       (EstimatorSpec): Model to be run by Estimator.
     """
-    if mode != tf.estimator.ModeKeys.PREDICT:
+    if mode != tf.estimator.ModeKeys.TRAIN:
       self.net.phase = 'inference'
 
     layers = self.net.inference(features)
